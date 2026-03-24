@@ -7,13 +7,42 @@ import os
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from database import engine, Base, get_db
+from database import engine, Base, get_db, SessionLocal
 import models, schemas, crud, auth
 
-# Create Database tables
-Base.metadata.create_all(bind=engine)
+# Auto-seed admin user if not exists
+def seed_admin():
+    db = SessionLocal()
+    try:
+        admin_user = crud.get_user_by_username(db, "admin")
+        if not admin_user:
+            crud.create_user(
+                db, schemas.UserCreate(
+                    username="admin", 
+                    password="password123", 
+                    role=models.RoleEnum.Admin
+                )
+            )
+            print("Admin user created: admin / password123")
+    except Exception as e:
+        print(f"Error seeding admin user: {e}")
+    finally:
+        db.close()
 
-app = FastAPI(title="Lead Management CRM")
+from contextlib import asynccontextmanager
+
+# Define lifespan to handle startup tasks
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Create Database tables
+    try:
+        Base.metadata.create_all(bind=engine)
+        seed_admin()
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+    yield
+
+app = FastAPI(title="Lead Management CRM", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -131,8 +160,15 @@ def verify_payment_proof(lead_id: int, version: int, db: Session = Depends(get_d
     return {"message": "Payment proof verified"}
 
 # ========== FRONTEND ==========
-frontend_path = os.path.join(os.path.dirname(__file__), "frontend")
-app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+from pathlib import Path
+
+# Static files should be served from the frontend folder
+frontend_dir = Path(__file__).parent / "frontend"
+
+if frontend_dir.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dir), html=True), name="frontend")
+else:
+    print(f"Warning: Frontend directory '{frontend_dir}' not found. UI will not be served.")
 
 if __name__ == "__main__":
     import uvicorn

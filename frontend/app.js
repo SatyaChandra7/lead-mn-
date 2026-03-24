@@ -3,6 +3,7 @@ const API_URL = '';
 // State
 let token = localStorage.getItem('access_token');
 let currentUserRole = '';
+let currentLeads = [];
 
 // DOM Elements
 const authView = document.getElementById('authView');
@@ -21,6 +22,14 @@ const toast = document.getElementById('toast');
 const toastMessage = document.getElementById('toastMessage');
 const leadsLoader = document.getElementById('leadsLoader');
 const noLeadsState = document.getElementById('noLeadsState');
+
+// New DOM Elements
+const editLeadModal = document.getElementById('editLeadModal');
+const editLeadForm = document.getElementById('editLeadForm');
+const closeEditModalBtn = document.getElementById('closeEditModalBtn');
+const cancelEditBtn = document.getElementById('cancelEditBtn');
+const editLeadStatus = document.getElementById('editLeadStatus');
+const escalationReasonGroup = document.getElementById('escalationReasonGroup');
 
 // Initialize
 function init() {
@@ -82,8 +91,8 @@ async function loadLeads() {
         });
         
         if (res.ok) {
-            const leads = await res.json();
-            renderLeads(leads);
+            currentLeads = await res.json();
+            renderLeads(currentLeads);
         } else {
             showToast("Failed to load leads", true);
         }
@@ -121,12 +130,80 @@ function renderLeads(leads) {
             <td><span class="status ${statusClass}">${displayStatus}</span></td>
             <td><span class="lead-subtext">${new Date(lead.created_at).toLocaleDateString()}</span></td>
             <td>
-                <button class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;">View</button>
+                <button class="btn btn-outline" onclick="openEditModal(${lead.id})" style="padding: 6px 12px; font-size: 13px;">View / Edit</button>
             </td>
         `;
         leadsTableBody.appendChild(tr);
     });
 }
+
+// Global modal function
+window.openEditModal = (id) => {
+    const lead = currentLeads.find(l => l.id === id);
+    if (!lead) return;
+
+    document.getElementById('editModalTitle').textContent = `Manage Lead: ${lead.name}`;
+    document.getElementById('editLeadId').value = lead.id;
+    document.getElementById('editLeadVersion').value = lead.version;
+    document.getElementById('editLeadStatus').value = lead.status.replace('LeadStatus.', '');
+    
+    editLeadModal.classList.remove('hidden');
+};
+
+const closeEditModal = () => {
+    editLeadModal.classList.add('hidden');
+    editLeadForm.reset();
+    escalationReasonGroup.style.display = 'none';
+};
+
+closeEditModalBtn.addEventListener('click', closeEditModal);
+cancelEditBtn.addEventListener('click', closeEditModal);
+
+editLeadStatus.addEventListener('change', (e) => {
+    if (e.target.value === 'Escalated') {
+        escalationReasonGroup.style.display = 'block';
+    } else {
+        escalationReasonGroup.style.display = 'none';
+    }
+});
+
+editLeadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editLeadId').value;
+    const version = parseInt(document.getElementById('editLeadVersion').value);
+    
+    const updateData = {
+        status: document.getElementById('editLeadStatus').value,
+        notes: document.getElementById('editLeadNotes').value,
+        version: version
+    };
+
+    if (updateData.status === 'Escalated') {
+        updateData.reason = document.getElementById('escalationReason').value;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/leads/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updateData)
+        });
+
+        if (res.ok) {
+            showToast("Lead updated successfully");
+            closeEditModal();
+            loadLeads();
+        } else {
+            const err = await res.json();
+            showToast(err.detail || "Update failed", true);
+        }
+    } catch (e) {
+        showToast("Network error", true);
+    }
+});
 
 // Event Listeners
 loginForm.addEventListener('submit', async (e) => {

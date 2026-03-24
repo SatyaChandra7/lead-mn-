@@ -3,6 +3,7 @@ uvicorn
 sqlalchemy
 pydantic[email]
 passlib[bcrypt]
-pyjwt
+bcrypt
 python-multipart
 python-jose[cryptography]
+psycopg2-binary

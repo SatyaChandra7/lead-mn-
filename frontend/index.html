@@ -141,6 +141,47 @@
         </div>
     </div>
 
+    <!-- Edit Lead Modal -->
+    <div id="editLeadModal" class="modal-overlay hidden">
+        <div class="glass-card modal-content">
+            <div class="modal-header">
+                <h2 id="editModalTitle">Edit Lead</h2>
+                <button id="closeEditModalBtn" class="close-btn">&times;</button>
+            </div>
+            <form id="editLeadForm">
+                <input type="hidden" id="editLeadId">
+                <input type="hidden" id="editLeadVersion">
+                
+                <div class="input-group">
+                    <label for="editLeadStatus">Update Status</label>
+                    <select id="editLeadStatus" required>
+                        <option value="New">New</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="FollowUp">Follow Up</option>
+                        <option value="Escalated">Escalate to Counsellor</option>
+                        <option value="PaymentPending">Waiting for Payment</option>
+                        <option value="Converted">Convert to Student</option>
+                        <option value="Dead">Mark as Dead</option>
+                    </select>
+                </div>
+                
+                <div class="input-group" id="escalationReasonGroup" style="display: none;">
+                    <label for="escalationReason">Reason for Escalation/Reassignment</label>
+                    <textarea id="escalationReason" placeholder="Why are youEscalating this lead?"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="editLeadNotes">Activity Note</label>
+                    <textarea id="editLeadNotes" placeholder="Add any updates or notes..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancelEditBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Lead</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
