@@ -33,7 +33,8 @@ class User(Base):
     password_hash = Column(String)
     role = Column(SQLEnum(RoleEnum))
 
-    leads = relationship("Lead", back_populates="assignee")
+    leads = relationship("Lead", back_populates="assignee", foreign_keys="Lead.assigned_to_id")
+    created_leads = relationship("Lead", back_populates="creator", foreign_keys="Lead.created_by_id")
 
 class Lead(Base):
     """Lead model representing a potential student."""
@@ -51,7 +52,8 @@ class Lead(Base):
                         onupdate=datetime.datetime.utcnow)
     version = Column(Integer, default=1)  # Optimistic concurrency control
 
-    assignee = relationship("User", back_populates="leads")
+    assignee = relationship("User", back_populates="leads", foreign_keys=[assigned_to_id])
+    creator = relationship("User", back_populates="created_leads", foreign_keys=[created_by_id])
     activities = relationship("LeadActivity", back_populates="lead")
     followups = relationship("FollowUp", back_populates="lead")
     payments = relationship("PaymentProof", back_populates="lead")
