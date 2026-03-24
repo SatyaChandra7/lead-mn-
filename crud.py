@@ -105,7 +105,7 @@ async def get_leads(db: Session, current_user: User):
     leads = await cursor.to_list(length=1000)
     # Ensure ID is included in the output for Pydantic
     for l in leads:
-        if "_id" in l: del l["_id"]
+        l.pop("_id", None)
     return leads
 
 async def update_lead(db: Session, lead_id: int, lead_update: LeadUpdate, current_user: User):
