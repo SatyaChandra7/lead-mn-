@@ -111,6 +111,20 @@ def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
     """Get the profile of the current authenticated user."""
     return current_user
 
+@app.get("/admin/stats", tags=["Admin"])
+def get_admin_stats(db: Session = Depends(get_db),
+                   _admin: models.User = Depends(auth.require_role(["Admin"]))):
+    """Retrieve high-level dashboard metrics (Admin Only)."""
+    total_leads = db.query(models.Lead).count()
+    converted = db.query(models.Lead).filter(models.Lead.status == models.LeadStatus.CONVERTED).count()
+    follow_ups = db.query(models.Lead).filter(models.Lead.status == models.LeadStatus.FOLLOW_UP).count()
+    return {
+        "total_leads": total_leads,
+        "converted": converted,
+        "follow_up_needed": follow_ups,
+        "conversion_rate": f"{(converted/total_leads*100):.1f}%" if total_leads > 0 else "0%"
+    }
+
 # ========== LEADS ==========
 
 @app.post("/leads", response_model=schemas.LeadOut, tags=["Leads"])

@@ -22,6 +22,11 @@ const toast = document.getElementById('toast');
 const toastMessage = document.getElementById('toastMessage');
 const leadsLoader = document.getElementById('leadsLoader');
 const noLeadsState = document.getElementById('noLeadsState');
+const adminStatsBar = document.getElementById('adminStatsBar');
+const statTotal = document.getElementById('statTotal');
+const statConverted = document.getElementById('statConverted');
+const statFollow = document.getElementById('statFollow');
+const statRate = document.getElementById('statRate');
 
 // New DOM Elements
 const editLeadModal = document.getElementById('editLeadModal');
@@ -49,7 +54,13 @@ function showAuth() {
 function showDashboard() {
     authView.classList.add('hidden');
     dashboardView.classList.remove('hidden');
-    fetchCurrentUser();
+    fetchCurrentUser().then(() => {
+        if (currentUserRole === 'Admin') {
+            loadAdminStats();
+        } else {
+            adminStatsBar.classList.add('hidden');
+        }
+    });
     loadLeads();
 }
 
@@ -77,6 +88,24 @@ async function fetchCurrentUser() {
         }
     } catch (e) {
         console.error(e);
+    }
+}
+
+async function loadAdminStats() {
+    try {
+        const res = await fetch(`${API_URL}/admin/stats`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const stats = await res.json();
+            statTotal.textContent = stats.total_leads;
+            statConverted.textContent = stats.converted;
+            statFollow.textContent = stats.follow_up_needed;
+            statRate.textContent = stats.conversion_rate;
+            adminStatsBar.classList.remove('hidden');
+        }
+    } catch (e) {
+        console.error("Failed to load admin stats", e);
     }
 }
 
