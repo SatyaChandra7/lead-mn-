@@ -45,6 +45,7 @@ class Lead(Base):
     source = Column(String)
     status = Column(SQLEnum(LeadStatus), default=LeadStatus.NEW)
     assigned_to_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow,
                         onupdate=datetime.datetime.utcnow)

@@ -52,7 +52,8 @@ def create_lead(db: Session, lead: LeadCreate, current_user: User):
         email=lead.email,
         phone=lead.phone,
         source=lead.source,
-        status=LeadStatus.NEW
+        status=LeadStatus.NEW,
+        created_by_id=current_user.id
     )
     new_lead.assigned_to_id = auto_assign_lead(db)
 
@@ -71,8 +72,10 @@ def get_leads(db: Session, current_user: User):
     """Retrieve leads based on user role."""
     if current_user.role == RoleEnum.ADMIN:
         return db.query(Lead).all()
-    # Telecaller/Counsellor can only see assigned leads
-    return db.query(Lead).filter(Lead.assigned_to_id == current_user.id).all()
+    # Telecaller/Counsellor can see both assigned and created leads
+    return db.query(Lead).filter(
+        (Lead.assigned_to_id == current_user.id) | (Lead.created_by_id == current_user.id)
+    ).all()
 
 def update_lead(db: Session, lead_id: int, lead_update: LeadUpdate, current_user: User):
     """Update a lead's status, notes, or assignment securely."""

@@ -116,7 +116,7 @@ def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
 @app.post("/leads", response_model=schemas.LeadOut, tags=["Leads"])
 def create_lead(lead: schemas.LeadCreate,
                 db: Session = Depends(get_db),
-                current_user: models.User = Depends(auth.require_role(["Admin", "Counsellor"]))):
+                current_user: models.User = Depends(auth.require_role(["Admin", "Counsellor", "Telecaller"]))):
     """Create a new lead."""
     return crud.create_lead(db=db, lead=lead, current_user=current_user)
 
