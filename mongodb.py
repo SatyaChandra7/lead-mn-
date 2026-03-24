@@ -34,4 +34,17 @@ async def close_mongo_connection():
         print("MongoDB connection closed.")
 
 def get_mongo_db():
+    if db is None:
+        # In case it's called before connect_to_mongo (though unlikely in FastAPI)
+        return None
     return db
+
+async def get_next_sequence_value(sequence_name: str):
+    """Generate an auto-incrementing integer ID for MongoDB collections."""
+    result = await db.counters.find_one_and_update(
+        {"_id": sequence_name},
+        {"$inc": {"sequence_value": 1}},
+        upsert=True,
+        return_document=True
+    )
+    return result["sequence_value"]
