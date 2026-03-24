@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Management CRM</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <meta name="description" content="A premium CRM platform to manage your leads efficiently with high aesthetics.">
+</head>
+<body>
+    <!-- Background element for rich aesthetics -->
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden">
+        <span id="toastMessage">Notification</span>
+    </div>
+
+    <!-- Auth Container -->
+    <div class="container auth-container active" id="authView">
+        <div class="glass-card auth-card">
+            <h1>Welcome Back</h1>
+            <p class="subtitle">Log in to manage your leads</p>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="e.g. admin" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span class="btn-text">Sign In</span>
+                    <div class="loader hidden" id="loginLoader"></div>
+                </button>
+            </form>
+            <div class="demo-creds">
+                <p>Demo: <code>admin</code> / <code>password123</code></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div class="container dashboard-container hidden" id="dashboardView">
+        <header class="glass-header">
+            <div class="header-content">
+                <div class="logo">
+                    <h2>LeadCRM.</h2>
+                </div>
+                <div class="user-actions">
+                    <span id="currentUser" class="user-badge">Role: Admin</span>
+                    <button id="logoutBtn" class="btn btn-outline">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard-main">
+            <div class="dashboard-header">
+                <div class="header-titles">
+                    <h1>Lead Pipeline</h1>
+                    <p>Track, manage, and engage with your recent leads.</p>
+                </div>
+                <button id="addLeadBtn" class="btn btn-primary">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    New Lead
+                </button>
+            </div>
+
+            <div class="glass-card table-wrapper">
+                <table id="leadsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact Info</th>
+                            <th>Source</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leadsTableBody">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+                <div id="noLeadsState" class="empty-state hidden">
+                    <div class="empty-icon">📂</div>
+                    <h3>No leads found</h3>
+                    <p>Start by creating your first lead to begin tracking.</p>
+                </div>
+                <div id="leadsLoader" class="loader-overlay hidden">
+                    <div class="loader"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Lead Modal -->
+    <div id="createLeadModal" class="modal-overlay hidden">
+        <div class="glass-card modal-content">
+            <div class="modal-header">
+                <h2>Create New Lead</h2>
+                <button id="closeModalBtn" class="close-btn">&times;</button>
+            </div>
+            <form id="createLeadForm">
+                <div class="input-group">
+                    <label for="leadName">Full Name</label>
+                    <input type="text" id="leadName" required placeholder="John Doe">
+                </div>
+                <div class="split-inputs">
+                    <div class="input-group">
+                        <label for="leadEmail">Email Address</label>
+                        <input type="email" id="leadEmail" required placeholder="john@example.com">
+                    </div>
+                    <div class="input-group">
+                        <label for="leadPhone">Phone Number</label>
+                        <input type="text" id="leadPhone" required placeholder="+1 234 567 8900">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="leadSource">Source</label>
+                    <select id="leadSource" required>
+                        <option value="Website">Website</option>
+                        <option value="Referral">Referral</option>
+                        <option value="Social Media">Social Media</option>
+                        <option value="Direct">Direct Contact</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="cancelLeadBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveLeadBtn">Save Lead</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
