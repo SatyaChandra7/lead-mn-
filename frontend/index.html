@@ -43,7 +43,9 @@
                 </button>
             </form>
             <div class="demo-creds">
-                <p>Demo: <code>admin</code> / <code>password123</code></p>
+                <p>Admin: <code>admin</code> / <code>password123</code></p>
+                <p>Counsellor: <code>counsellor1</code> / <code>password123</code></p>
+                <p>Telecaller: <code>telecaller1</code> / <code>password123</code></p>
             </div>
         </div>
     </div>
@@ -120,8 +122,12 @@
                         <input type="email" id="leadEmail" required placeholder="john@example.com">
                     </div>
                     <div class="input-group">
-                        <label for="leadPhone">Phone Number</label>
-                        <input type="text" id="leadPhone" required placeholder="+1 234 567 8900">
+                        <label for="leadPhone">Phone Number (10 Digits)</label>
+                        <input type="tel" id="leadPhone" required 
+                               pattern="[0-9]{10}" 
+                               maxlength="10" 
+                               placeholder="9876543210"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '');">
                     </div>
                 </div>
                 <div class="input-group">

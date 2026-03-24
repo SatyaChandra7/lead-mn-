@@ -4,7 +4,7 @@ Pydantic schemas for the Lead Management CRM.
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from models import RoleEnum, LeadStatus
 
@@ -43,7 +43,7 @@ class LeadCreate(BaseModel):
     """Schema for creating a new lead."""
     name: str
     email: str
-    phone: str
+    phone: int = Field(..., ge=1000000000, le=9999999999, description="10-digit phone number")
     source: str
 
 
@@ -52,7 +52,7 @@ class LeadOut(BaseModel):
     id: int
     name: str
     email: str
-    phone: str
+    phone: int
     source: str
     status: LeadStatus
     assigned_to_id: Optional[int] = None

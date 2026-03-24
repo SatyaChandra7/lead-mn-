@@ -38,11 +38,11 @@ def auto_assign_lead(db: Session):
     """Auto-assign a lead to a telecaller or counsellor."""
     # Simple round-robin logic: find Telecaller with fewest leads in non-terminal states
     # For now, just pick the first Telecaller or Counsellor
-    telecaller = db.query(User).filter(User.role == RoleEnum.Telecaller).first()
+    telecaller = db.query(User).filter(User.role == RoleEnum.TELECALLER).first()
     if telecaller:
         return telecaller.id
     # Fallback to counsellor
-    counsellor = db.query(User).filter(User.role == RoleEnum.Counsellor).first()
+    counsellor = db.query(User).filter(User.role == RoleEnum.COUNSELLOR).first()
     return counsellor.id if counsellor else None
 
 def create_lead(db: Session, lead: LeadCreate, current_user: User):
@@ -52,7 +52,7 @@ def create_lead(db: Session, lead: LeadCreate, current_user: User):
         email=lead.email,
         phone=lead.phone,
         source=lead.source,
-        status=LeadStatus.New
+        status=LeadStatus.NEW
     )
     new_lead.assigned_to_id = auto_assign_lead(db)
 
@@ -69,7 +69,7 @@ def create_lead(db: Session, lead: LeadCreate, current_user: User):
 
 def get_leads(db: Session, current_user: User):
     """Retrieve leads based on user role."""
-    if current_user.role == RoleEnum.Admin:
+    if current_user.role == RoleEnum.ADMIN:
         return db.query(Lead).all()
     # Telecaller/Counsellor can only see assigned leads
     return db.query(Lead).filter(Lead.assigned_to_id == current_user.id).all()
@@ -81,7 +81,7 @@ def update_lead(db: Session, lead_id: int, lead_update: LeadUpdate, current_user
         raise HTTPException(status_code=404, detail="Lead not found")
 
     # Check permissions
-    if current_user.role != RoleEnum.Admin and lead.assigned_to_id != current_user.id:
+    if current_user.role != RoleEnum.ADMIN and lead.assigned_to_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to update this lead")
 
     # Concurrency / Version check
@@ -94,18 +94,18 @@ def update_lead(db: Session, lead_id: int, lead_update: LeadUpdate, current_user
     # Status Transition Check
     if lead_update.status and lead_update.status != lead.status:
         # Rules configuration
-        if lead.status in [LeadStatus.Converted, LeadStatus.Dead]:
+        if lead.status in [LeadStatus.CONVERTED, LeadStatus.DEAD]:
             raise HTTPException(status_code=400, detail="Cannot change Converted/Dead leads")
 
         # Escalate Rules
-        if lead_update.status == LeadStatus.Escalated:
+        if lead_update.status == LeadStatus.ESCALATED:
             if not lead_update.reason:
                 raise HTTPException(status_code=400, detail="Reason required to escalate lead")
             notes_added += f"Escalated. Reason: {lead_update.reason} "
 
             # Reassign to a counsellor if current is telecaller
-            if current_user.role == RoleEnum.Telecaller:
-                counsellor = db.query(User).filter(User.role == RoleEnum.Counsellor).first()
+            if current_user.role == RoleEnum.TELECALLER:
+                counsellor = db.query(User).filter(User.role == RoleEnum.COUNSELLOR).first()
                 if counsellor:
                     lead.assigned_to_id = counsellor.id
                     notes_added += f"(Auto-assigned to Counsellor ID {counsellor.id})"
@@ -117,14 +117,16 @@ def update_lead(db: Session, lead_id: int, lead_update: LeadUpdate, current_user
         )
 
     # Manual Reassignment
-    if lead_update.assigned_to_id and current_user.role in [RoleEnum.Admin, RoleEnum.Counsellor]:
+    if lead_update.assigned_to_id and current_user.role in [RoleEnum.ADMIN, RoleEnum.COUNSELLOR]:
         if not lead_update.reason:
             raise HTTPException(status_code=400, detail="Reason required for manual reassignment")
         old_assignee = lead.assigned_to_id
         lead.assigned_to_id = lead_update.assigned_to_id
+        details = (f"From {old_assignee} to {lead_update.assigned_to_id}. "
+                   f"Reason: {lead_update.reason}")
         log_activity(
             db, lead.id, current_user.id, "REASSIGNED",
-            details=f"From {old_assignee} to {lead_update.assigned_to_id}. Reason: {lead_update.reason}"
+            details=details
         )
 
     # Generic Notes Update
@@ -139,11 +141,11 @@ def update_lead(db: Session, lead_id: int, lead_update: LeadUpdate, current_user
 
 def convert_lead(db: Session, lead_id: int, current_user: User):
     """Convert a lead to a student if they have verified payments."""
-    if current_user.role == RoleEnum.Telecaller:
+    if current_user.role == RoleEnum.TELECALLER:
         raise HTTPException(status_code=403, detail="Telecallers cannot convert leads")
 
     lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead or lead.status == LeadStatus.Converted:
+    if not lead or lead.status == LeadStatus.CONVERTED:
         raise HTTPException(status_code=400, detail="Invalid lead to convert")
 
     # Payment Verification rule check could go here
@@ -168,10 +170,10 @@ def convert_lead(db: Session, lead_id: int, current_user: User):
     )
 
     prev_state = lead.status.value
-    lead.status = LeadStatus.Converted
+    lead.status = LeadStatus.CONVERTED
     log_activity(
         db, lead.id, current_user.id, "CONVERTED",
-        prev_state=prev_state, new_state=LeadStatus.Converted.value,
+        prev_state=prev_state, new_state=LeadStatus.CONVERTED.value,
         details="Converted to Student"
     )
 
